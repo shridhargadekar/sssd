@@ -42,13 +42,17 @@ class pexpect_ssh(object):
 
     def command(self, command, raiseonerr=False):
         """ Run Non interactive Commands """
+        # Disable bracketed-paste mode in libreadline,
+        # see https://github.com/pexpect/pexpect/issues/669 for details
+        self.ssh.sendline("bind 'set enable-bracketed-paste off' 2> /dev/null")
+        self.ssh.prompt()
         self.ssh.sendline(command)
         self.ssh.prompt()
         output_utf8 = self.ssh.before
         self.ssh.sendline("echo $?")
         self.ssh.prompt()
         returncode = self.ssh.before
-        ret = returncode.decode('utf-8').split('\r')[1].strip('\n')
+        ret = returncode.decode('utf-8').splitlines()[1].strip('\n')
         output_str = output_utf8.decode('utf-8')
         if raiseonerr:
             if (int(ret)) != 0:
